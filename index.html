@@ -1,0 +1,460 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>考試測驗系統</title>
+    <script src="util.js"></script>
+    <style>
+        :root {
+            --primary-color: #2b6cb0;
+            --bg-color: #f7fafc;
+            --card-bg: #ffffff;
+            --text-color: #2d3748;
+            --border-color: #e2e8f0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 24px 16px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #1a202c;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 8px;
+        }
+
+        .cat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .cat-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+        }
+
+        .cat-card__header {
+            display: flex;
+            align-items: center;
+            color: var(--primary-color);
+            font-weight: bold;
+            font-size: 1.1rem;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 12px;
+        }
+
+        .cat-card__id {
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            margin-right: 8px;
+            flex-shrink: 0;
+        }
+
+        .cat-card__name {
+            flex-grow: 1;
+        }
+
+        .cat-card__count {
+            background-color: #ebf8ff;
+            color: #2b6cb0;
+            font-size: 0.85rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: normal;
+        }
+
+        .sub_category__list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sub_category__list li {
+            margin-bottom: 6px;
+        }
+
+        .sub_category__link {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-decoration: none;
+            color: #4a5568;
+            font-size: 0.95rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .sub_category__link:hover {
+            background-color: #edf2f7;
+            color: #2b6cb0;
+        }
+
+        .word_count {
+            font-size: 0.8rem;
+            color: #a0aec0;
+        }
+
+        .word_count::before {
+            content: "(";
+        }
+        .word_count::after {
+            content: ")";
+        }
+        
+        .btn-quiz-start {
+            background-color: #3182ce;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            box-shadow: 0 2px 4px rgba(49, 130, 206, 0.2);
+        }
+
+        .btn-quiz-start:hover {
+            background-color: #2b6cb0;
+        }
+
+        .btn-quiz-start:active {
+            transform: scale(0.98);
+        }
+
+        .btn-quiz-start:disabled {
+            background-color: #cbd5e0;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input[type="number"] {
+            padding: 6px 10px;
+            font-size: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            width: 120px;
+        }
+		
+		/* 針對瀏覽器內建的「選擇檔案」按鈕進行微調（以 Webkit 核心為例，如 Chrome、Safari、Edge） */
+		input[type="file"]::file-selector-button {
+			padding: 6px 12px;
+			margin-right: 12px;
+			font-size: 13px;
+			font-weight: 500;
+			color: #fff;
+			background-color: #4CAF50;
+			border: none;
+			border-radius: 4px;
+			cursor: pointer;
+			transition: background-color 0.2s;
+		}
+
+		/* 檔案按鈕 hover 效果 */
+		input[type="file"]::file-selector-button:hover {
+			background-color: #45a049;
+		}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="section-title">考試測驗系統設定</div>
+        
+        <div class="cat-card">
+			<div class="form-group" style="margin-top: 10px;">
+				<button type="button" id="openCreatorBtn" class="btn-quiz-start" style="background-color: #4CAF50;" onclick="openQuizCreatorDialog()">製作題庫檔案</button>
+			</div>
+            <div class="form-group">
+                <label for="fileInput">上傳題庫檔案 (JSON 格式的 TXT)：</label>
+                <input type="file" id="fileInput" accept=".txt,.json" multiple>
+            </div>
+
+            <div class="form-group">
+                <label for="questionCountInput">考題數量設定：</label>
+                <input type="number" id="questionCountInput" value="20" min="1">
+            </div>
+			
+			<div class="form-group">
+                <label for="startQuestionInput">從第幾題開始：</label>
+                <input type="number" id="startQuestionInput" value="1" min="1">
+            </div>
+
+            <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" id="randomQuizCheckbox" style="width: auto; margin: 0;" checked>
+                <label for="randomQuizCheckbox" style="margin: 0; cursor: pointer;">是否隨機</label>
+            </div>
+
+            <button id="startBtn" class="btn-quiz-start">開始測驗</button>
+        </div>
+    </div>
+	<dialog id="quizCreatorDialog" style="padding: 20px; border-radius: 8px; border: 1px solid #ccc; width: 80%; max-width: 600px;">
+		<h3>製作題庫檔案</h3>
+		<div class="form-group" style="margin-bottom: 15px;">
+			<label>提問方式：<br>給我「30題」「翰林國二英文」的考古題<br>用[{"ja":{"q":問題,"op":[選項1,選項2,選項3,選項4],"an":1或2或3或4,"al":中文解析}}]解析裡有提到選項的部分使用[1],[2],[3],[4]這樣的格式合成一個json</label>
+		</div>
+		<div class="form-group" style="margin-bottom: 15px;">
+			<label for="dialogFileName">檔案名稱 (例如：quiz.txt)：</label>
+			<input type="text" id="dialogFileName" value="my_quiz.txt" style="width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box;">
+		</div>
+		<div class="form-group" style="margin-bottom: 15px;">
+			<label for="dialogTextContent">輸入題庫內容 (JSON 格式)：</label>
+			<textarea id="dialogTextContent" rows="10" placeholder='請輸入 JSON 格式的題庫，例如：[{"zh": {...}, "ja": {...}}]' style="width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; font-family: monospace;"></textarea>
+		</div>
+		<div style="text-align: right;">
+			<button type="button" id="closeDialogBtn" style="padding: 8px 15px; margin-right: 10px; cursor: pointer;" onclick="closeQuizCreatorDialog()">取消</button>
+			<button type="button" id="saveQuizFileBtn" style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;" onclick="saveQuizFile()">保存並下載</button>
+		</div>
+	</dialog>
+
+    <script>
+        // 頁面載入時，從 localStorage 還原上傳的檔案路徑/檔名與設定（若有的話）
+        window.addEventListener('DOMContentLoaded',async () => {
+            const savedGroupName = localStorage.getItem('quizGroupName');
+            const savedCount = localStorage.getItem('quizQuestionLimit');
+			const savedStartQuestion = localStorage.getItem("startQuestion");
+			const savedIsRandom = localStorage.getItem("isRandom");
+            
+            if (savedCount) {
+                document.getElementById('questionCountInput').value = savedCount;
+            }
+            if (savedStartQuestion) {
+                document.getElementById('startQuestionInput').value = savedStartQuestion;
+            }
+            if (!savedIsRandom) {
+                document.getElementById('isRandom').checked = !savedIsRandom;
+            }
+        });
+		
+		function gotoQuiz(finalQuestions, groupName){
+			
+			const startQInput = document.getElementById("startQuestionInput");
+			const randomCheckbox = document.getElementById("randomQuizCheckbox");
+			const startQ = startQInput.value;
+			const isRandom = randomCheckbox.checked ? "true" : "false";
+			
+			utilGotoQuiz(finalQuestions, groupName, startQ, isRandom, true);
+		}
+
+        document.getElementById('startBtn').addEventListener('click', () => {
+            const fileInput = document.getElementById('fileInput');
+            const countInput = document.getElementById('questionCountInput');
+			const startQInput = document.getElementById("startQuestionInput");
+			const randomCheckbox = document.getElementById("randomQuizCheckbox");
+            
+            if (fileInput.files.length === 0) {
+                alert('請先選擇一個上傳的檔案！');
+                return;
+            }
+
+            const files = Array.from(fileInput.files);
+            const requestedCount = parseInt(countInput.value, 10) || 20;
+			const isRandom = randomCheckbox.checked
+            // 儲存設定至 localStorage
+            localStorage.setItem('quizQuestionLimit', requestedCount);
+            localStorage.setItem('startQuestion', startQInput.value);
+            localStorage.setItem('isRandom', isRandom);
+
+            // 讀取所有檔案的 Promise 陣列
+            const readFilePromises = files.map(file => {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            const questions = parserJson(e.target.result, file.name);
+                            resolve(questions);
+                        } catch (err) {
+                            reject(new Error(`檔案 [${file.name}] 解析失敗：${err.message}`));
+                        }
+                    };
+                    reader.onerror = () => reject(new Error(`無法讀取檔案 [${file.name}]`));
+                    reader.readAsText(file, 'UTF-8');
+                });
+            });
+
+            // 等待所有檔案讀取與解析完成
+            Promise.all(readFilePromises)
+                .then(results => {
+                    // 將多個檔案的題目全部合併成一個大陣列 (Flat)
+                    let allQuestions = [].concat(...results);
+					//console.log(allQuestions);
+
+                    // 使用 Fisher-Yates 演算法將所有題目隨機打亂（洗牌）
+                    let shuffledCards = [...allQuestions];
+					if(isRandom) {
+						for (let i = shuffledCards.length - 1; i > 0; i--) {
+							const j = Math.floor(Math.random() * (i + 1));
+							[shuffledCards[i], shuffledCards[j]] = [shuffledCards[j], shuffledCards[i]];
+						}
+					}
+
+                    // 取得最大可用題目數（防止要求數量大於總題數）
+                    const actualCount = Math.min(requestedCount, shuffledCards.length);
+                    const finalQuestions = shuffledCards.slice(0, actualCount);
+
+                    const groupNames = files[0].name
+
+                    gotoQuiz(finalQuestions, groupNames);
+                })
+                .catch(err => {
+                    alert(err.message);
+                });
+        });
+		
+		// 1. 打開 dialog
+		function openQuizCreatorDialog() {
+			const dialog = document.getElementById('quizCreatorDialog');
+			if (dialog) {
+				if (dialog.showModal) {
+					dialog.showModal();
+				} else {
+					dialog.setAttribute('open', true);
+				}
+			}
+		}
+
+		// 2. 關閉 dialog (取消)
+		function closeQuizCreatorDialog() {
+			const dialog = document.getElementById('quizCreatorDialog');
+			if (dialog) {
+				dialog.close();
+			}
+		}
+
+		// 3. 保存並下載檔案，然後關閉 dialog
+		function saveQuizFile() {
+			const fileNameInput = document.getElementById('dialogFileName');
+			const textContentInput = document.getElementById('dialogTextContent');
+			const dialog = document.getElementById('quizCreatorDialog');
+
+			const fileName = fileNameInput ? fileNameInput.value.trim() || 'quiz.txt' : 'quiz.txt';
+			const content = textContentInput ? textContentInput.value : '';
+
+			if (!content) {
+				alert('請輸入題庫內容！');
+				return;
+			}
+
+			// 1. 檢查是否為合法的 JSON 格式並符合指定結構
+			try {
+				const parsedData = JSON.parse(content);
+
+				// 檢查根節點是否為陣列
+				if (!Array.isArray(parsedData)) {
+					throw new Error('根節點必須是陣列格式 [...]');
+				}
+
+				// 逐一檢查每一道題目結構是否符合要求
+				for (let i = 0; i < parsedData.length; i++) {
+					const item = parsedData[i];
+					const indexLabel = `第 ${i + 1} 題`;
+
+					if (!item || typeof item !== 'object') {
+						throw new Error(`${indexLabel} 必須是一個物件`);
+					}
+
+					if (!item.ja || typeof item.ja !== 'object') {
+						throw new Error(`${indexLabel} 缺少必要的 "ja" 物件`);
+					}
+
+					const ja = item.ja;
+
+					// 檢查 q (問題)
+					if (typeof ja.q !== 'string' || ja.q.trim() === '') {
+						throw new Error(`${indexLabel} 的 "ja.q" (問題) 必須是字串`);
+					}
+
+					// 檢查 op (選項陣列)
+					if (!Array.isArray(ja.op) || ja.op.length === 0) {
+						throw new Error(`${indexLabel} 的 "ja.op" (選項) 必須是非空的陣列`);
+					}
+
+					// 檢查 an (答案代號或數字：1~4)
+					if (ja.an === undefined || (typeof ja.an !== 'number' && typeof ja.an !== 'string')) {
+						throw new Error(`${indexLabel} 的 "ja.an" (答案) 格式錯誤`);
+					}
+
+					// 檢查 al (解析)
+					if (typeof ja.al !== 'string') {
+						throw new Error(`${indexLabel} 的 "ja.al" (解析) 必須是字串`);
+					}
+				}
+
+			} catch (e) {
+				alert('題庫格式驗證失敗！\n錯誤原因：' + e.message + '\n\n請確保格式為：[{"ja":{"q":"...","op":[...],"an":1,"al":"..."}}]');
+				return; // 格式不符合時直接阻擋，不進行下載
+			}
+
+			// 2. 驗證通過，建立 Blob 物件並觸發下載
+			const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = fileName;
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+			URL.revokeObjectURL(url);
+			
+			const fileInput = document.getElementById('fileInput'); // 取得上傳用的 fileInput 元素
+			// 檢查如果 fileInput 沒有選擇檔案的時候才設定
+			if (fileInput && fileInput.files.length === 0) {
+				// 建立 Blob 物件與 File 物件
+				const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+				const file = new File([blob], fileName, { type: 'text/plain', lastModified: new Date() });
+	
+				const dataTransfer = new DataTransfer();
+				dataTransfer.items.add(file);
+				fileInput.files = dataTransfer.files;
+
+				// 觸發 change 事件（如果你的網頁有監聽 fileInput 的 change 來自動讀取題庫，這行會非常有用）
+				const event = new Event('change', { bubbles: true });
+				fileInput.dispatchEvent(event);
+			}
+			
+			// 3. 保存之後關閉 dialog
+			if (dialog) {
+				dialog.close();
+			}
+		}
+    </script>
+</body>
+</html>

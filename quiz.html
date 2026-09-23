@@ -1,0 +1,987 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>隨機測驗</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 16px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        /* 標頭與得分區 */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #eef2f5;
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+        }
+
+        .quiz-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .quiz-subtitle {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .score-display {
+            background-color: #eef2f5;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            color: #2b6cb0;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
+        /* 語言切換按鈕 */
+        .language-switch {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .lang-btn {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #cbd5e0;
+            background-color: #fff;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            color: #4a5568;
+            transition: all 0.2s;
+        }
+
+        .lang-btn.active {
+            background-color: #3182ce;
+            color: white;
+            border-color: #3182ce;
+        }
+		
+        .lang-btn.hidden {
+            display: none !important;
+        }
+		
+        /* 題目卡片 */
+        .question-card {
+            margin-bottom: 20px;
+        }
+
+        .question-source {
+            font-size: 0.85rem;
+            color: #718096;
+            margin-bottom: 8px;
+        }
+
+        .question-body {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #2d3748;
+        }
+
+        /* 選項樣式 */
+        .option {
+            cursor: pointer;
+            padding: 12px 16px;
+            margin: 10px 0;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            background-color: #fff;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .option:hover {
+            background-color: #f7fafc;
+            border-color: #cbd5e0;
+        }
+
+        /* 被選取狀態 */
+        .option.selected {
+            border-color: #3182ce !important;
+            background-color: #ebf8ff !important;
+            font-weight: bold;
+        }
+
+        /* 答對與答錯樣式 */
+        .option.correct {
+            border-color: #38a169 !important;
+            background-color: #f0fff4 !important;
+            color: #22543d;
+            font-weight: bold;
+        }
+
+        .option.incorrect {
+            border-color: #e53e3e !important;
+            background-color: #fff5f5 !important;
+            color: #742a2a;
+        }
+
+        /* 答案與解析放置於按鈕下方 */
+        .feedback-area {
+            margin-top: 16px;
+        }
+
+        .answer, .analysis {
+            display: none;
+            margin-top: 12px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .answer.show, .analysis.show {
+            display: block;
+        }
+
+        .answer {
+            background-color: #ebf8ff;
+            color: #2b6cb0;
+            border-left: 4px solid #3182ce;
+        }
+
+        .analysis {
+            background-color: #fffff0;
+            color: #975a16;
+            border-left: 4px solid #d69e2e;
+        }
+
+        /* 底部操作按鈕 */
+        .action-area {
+            margin-top: 24px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-primary {
+            background-color: #3182ce;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2b6cb0;
+        }
+
+        .btn-primary:disabled {
+            background-color: #cbd5e0;
+            cursor: not-allowed;
+        }
+
+        /* 讀取中與結果卡片 */
+        .loading, .result-card {
+            text-align: center;
+            padding: 30px 10px;
+        }
+
+        .result-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 12px;
+        }
+
+        .result-score {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #3182ce;
+            margin-bottom: 12px;
+        }
+
+        .result-detail {
+            color: #4a5568;
+            line-height: 1.6;
+        }
+		
+		/* 匯出錯題按鈕樣式 */
+		.btn-export-wrong {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			padding: 10px 20px;
+			font-size: 14px;
+			font-weight: 600;
+			color: #ffffff;
+			background: linear-gradient(135deg, #ff6b6b, #ee5253);
+			border: none;
+			border-radius: 8px;
+			box-shadow: 0 4px 10px rgba(238, 82, 83, 0.3);
+			cursor: pointer;
+			transition: all 0.2s ease-in-out;
+		}
+
+		/* 滑鼠懸停互動效果 */
+		.btn-export-wrong:hover {
+			background: linear-gradient(135deg, #ff5252, #d63031);
+			box-shadow: 0 6px 15px rgba(238, 82, 83, 0.4);
+			transform: translateY(-1px);
+		}
+
+		/* 點擊時的效果 */
+		.btn-export-wrong:active {
+			transform: translateY(1px);
+			box-shadow: 0 2px 5px rgba(238, 82, 83, 0.3);
+		}
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div>
+            <div class="quiz-title" id="quiz-title">🎯 隨機測驗</div>
+            <div class="quiz-subtitle" id="quiz-subtitle">測驗模組</div>
+        </div>
+        <div class="score-display" id="score-display">目前得分：0 / 總題數：0</div>
+    </div>
+    <div class="language-switch" id="language-switch">
+        <button class="lang-btn" id="btn-zh" onclick="switchLanguage('zh')">中文</button>
+        <button class="lang-btn active" id="btn-ja" onclick="switchLanguage('ja')">日本語</button>
+    </div>
+    <div style="margin-bottom: 12px; font-weight: 500; color: #718096;">
+        第 <span id="current-question">1</span> 題
+    </div>
+	
+	<!-- 題目區域 -->
+    <div id="question-display">
+        <div class="loading">載入題目中...</div>
+    </div>
+	
+    <!-- 結果顯示區 -->
+    <div id="result-display" style="display: none;"></div>
+
+    <!-- 按鈕控制區 -->
+    <div class="action-area">
+        <button class="btn btn-primary" id="action-btn" onclick="handleActionButton()" disabled>確認答案</button>
+        <button class="btn btn-primary" id="finish-btn" onclick="finishQuiz()" style="display: none;">返回上一頁</button>
+    </div>
+	
+    <!-- 答案與解析區塊 (現在位於按鈕下方) -->
+    <div id="feedback-area" class="feedback-area">
+        <div class="answer" id="answer-box"></div>
+        <div class="analysis" id="analysis-box"></div>
+    </div>
+</div>
+
+<script>
+let allQuestions = [];
+let currentIndex = -1; 
+let currentQuestion = null;
+let currentQuestionIndex = 0;
+let selectedOption = null;
+let isAnswered = false;
+let isAnswerWrong = false;
+let wrongQuestions = [];
+let score = 0;
+let currentLanguage = 'ja'; //zh, ja
+let answeredQuestions = [];
+let optionOrder = null;
+let isRandom = true;
+let startQuestion = 0;
+
+// 事件委派：點擊選項
+document.getElementById('question-display').addEventListener('click', function(e) {
+    const optionEl = e.target.closest('.option');
+    
+    if (optionEl && !isAnswered) {
+        const allOptions = this.querySelectorAll('.option');
+        allOptions.forEach(opt => opt.classList.remove('selected'));
+        
+        optionEl.classList.add('selected');
+        selectedOption = optionEl.textContent.trim();
+        
+        const actionBtn = document.getElementById('action-btn');
+        actionBtn.disabled = false;
+    }
+});
+
+function handleActionButton() {
+    if (!isAnswered) {
+        checkAnswer();
+	} else if(isAnswerWrong){
+		isAnswerWrong = false;
+		showNextQuestionText();
+    } else {
+        if ((answeredQuestions.length+startQuestion) >= allQuestions.length) {
+            showResult();
+        } else {
+            loadRandomQuestion();
+        }
+    }
+}
+
+function switchLanguage(lang) {
+    currentLanguage = lang;
+    
+    document.getElementById('btn-zh').classList.toggle('active', lang === 'zh');
+    document.getElementById('btn-ja').classList.toggle('active', lang === 'ja');
+    
+    if (currentQuestion) {
+        displayQuestion(currentQuestion);
+    }
+}
+
+function loadRandomQuestion(startQuestionIndex) {
+    const storedQuestions = localStorage.getItem('quizQuestions');
+    const groupName = localStorage.getItem('quizGroupName');
+    const currentEl = document.getElementById('current-question');
+    
+    if (groupName) {
+        document.getElementById('quiz-title').textContent = '🎯 隨機測驗';
+        document.getElementById('quiz-subtitle').textContent = groupName;
+    }
+    
+    if (storedQuestions) {
+        allQuestions = JSON.parse(storedQuestions);
+        
+        if (allQuestions.length === 0) {
+            document.getElementById('question-display').innerHTML = `
+                <div class="loading">
+                    ❌ 沒有題目<br>
+                    <small>請從主頁的測驗按鈕進入</small>
+                </div>
+            `;
+            return;
+        }
+        
+        if (answeredQuestions.length >= allQuestions.length) {
+            showResult();
+            return;
+        }
+        
+        let availableIndices = [];
+        for (let i = 0; i < allQuestions.length; i++) {
+            if (!answeredQuestions.includes(i)) {
+                availableIndices.push(i);
+            }
+        }
+		
+		let randomIndex = currentQuestionIndex;
+		if(isRandom){
+			randomIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
+		} else {
+			if(startQuestionIndex || startQuestionIndex === 0) {
+				randomIndex = startQuestionIndex;
+				currentIndex = randomIndex - 1;
+			}
+			else
+				randomIndex++;
+		}
+        
+        currentQuestion = allQuestions[randomIndex];
+		currentQuestionIndex = randomIndex;
+        answeredQuestions.push(randomIndex);
+        
+        selectedOption = null;
+        isAnswered = false;
+		optionOrder = null;
+        
+        const actionBtn = document.getElementById('action-btn');
+        actionBtn.textContent = '確認答案';
+        actionBtn.disabled = true;
+        
+		if(currentQuestion.groupName)
+			document.getElementById('quiz-subtitle').textContent = currentQuestion.groupName;
+		
+        updateScoreDisplay();
+        displayQuestion(currentQuestion);
+    
+		// 重置下方的顯示區域
+		document.getElementById('answer-box').classList.remove('show');
+		document.getElementById('analysis-box').classList.remove('show');
+    } else {
+        document.getElementById('question-display').innerHTML = `
+            <div class="loading">
+                ❌ 無法載入題目<br>
+                <small>請從主頁的測驗按鈕進入</small>
+            </div>
+        `;
+    }
+    
+    if(currentEl && answeredQuestions.length > 0){
+        currentIndex++;
+        currentEl.textContent = currentIndex + 1;
+    }
+}
+
+// 將純文字選項格式化為 <div class="option">
+function autoFormatOptions(htmlContent) {
+	return htmlContent;
+    /*console.log("autoFormatOptions原始內容：", htmlContent);
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = htmlContent;
+
+    // 1. 支援傳統 <ul class="options"> 格式
+    const ulLists = tempDiv.querySelectorAll('ul');
+    ulLists.forEach(ul => {
+        const lis = ul.querySelectorAll('li');
+        lis.forEach(li => {
+            const div = document.createElement('div');
+            div.className = 'option';
+            div.innerHTML = li.innerHTML.trim();
+            ul.parentNode.insertBefore(div, ul);
+        });
+        ul.remove();
+    });
+
+    // 2. 支援 <div class="options">...<br> 格式
+    const divOptions = tempDiv.querySelectorAll('div.options');
+    divOptions.forEach(container => {
+        const rawHtml = container.innerHTML;
+        const items = rawHtml.split(/<br\s*\/?>|\n/i).filter(item => item.trim() !== '');
+        
+        items.forEach(itemText => {
+            const div = document.createElement('div');
+            div.className = 'option';
+            div.innerHTML = itemText.trim();
+            container.parentNode.insertBefore(div, container);
+        });
+        container.remove();
+    });
+
+    // 3. 純文字格式轉換：支援 <div> 開頭或 <br> 隔開的選項格式
+    if (!tempDiv.querySelector('.option')) {
+        let htmlText = tempDiv.innerHTML;
+        
+        // 將所有 <br> 以及 <div> 結尾/開頭統一換成特殊標記 @@BR@@，確保第一個選項（如 A.）也能被獨立切出來
+        htmlText = htmlText.replace(/<br\s*\/?>/gi, '@@BR@@');
+        htmlText = htmlText.replace(/<\/div>\s*<div[^>]*>/gi, '@@BR@@');
+        htmlText = htmlText.replace(/<div[^>]*>/gi, '@@BR@@');
+        htmlText = htmlText.replace(/<\/div>/gi, '');
+        
+        const lines = htmlText.split('@@BR@@');
+        let newHtmlParts = [];
+
+        // 匹配：前面可有空白/&nbsp，接著是 (A)、A.、A： 等格式
+        const lineOptionRegex = /^\s*(?:&nbsp;)*\s*(?:\(?([A-Z|ア-エ])\)?|\b([A-Z|ア-エ])[\.:：])\s*(.+)$/i;
+
+        lines.forEach(line => {
+            const trimmedLine = line.trim();
+            const match = trimmedLine.match(lineOptionRegex);
+            
+            if (match) {
+                const symbol = (match[1] || match[2]).toUpperCase();
+                const text = match[3].trim();
+                newHtmlParts.push(`<div class="option">${symbol}. ${text}</div>`);
+            } else {
+                if (trimmedLine !== '') {
+                    newHtmlParts.push(line);
+                }
+            }
+        });
+
+        tempDiv.innerHTML = newHtmlParts.join('<br>\n');
+    }
+
+    // 4. 清理機制：刪除前後多餘的 <br> 與任何殘留的標籤
+    let cleanedHtml = tempDiv.innerHTML;
+    cleanedHtml = cleanedHtml.replace(/(?:<br\s*\/?>\s*)+<div class="option">/gi, '<div class="option">');
+    cleanedHtml = cleanedHtml.replace(/<\/div>\s*(?:<br\s*\/?>\s*)+/gi, '</div>');
+    cleanedHtml = cleanedHtml.replace(/<\/?ul[^>]*>/gi, '');
+    
+    console.log("finalHtml結果：", cleanedHtml);
+	return cleanedHtml;*/
+}
+// 修改 displayQuestion
+function displayQuestion(q) {
+    const btnZh = document.getElementById('btn-zh');
+    const btnJa = document.getElementById('btn-ja');
+	
+	const hasZh = q.zhContent && q.zhContent.trim() !== '';
+    const hasJa = q.jaContent && q.jaContent.trim() !== '';
+	if(!hasZh || !hasJa){
+		btnZh.classList.add('hidden');
+		btnJa.classList.add('hidden');
+	}
+	if(currentLanguage === 'jp' && !hasJa)
+		currentLanguage = 'zh'
+	if(currentLanguage === 'zh' && !hasZh)
+		currentLanguage = 'jp'
+		
+    let contentHtml = currentLanguage === 'zh' ? (q.zhContent || '') : (q.jaContent || '');
+    
+    // 預先提取答案與解析內容並儲存到變數
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = contentHtml;
+    const answerEl = tempDiv.querySelector('.answer');
+    const analysisEl = tempDiv.querySelector('.analysis');
+    
+    // 將答案內容暫存，以便 checkAnswer 使用
+    window.currentAnswerContent = answerEl ? answerEl.innerHTML : '';
+    window.currentAnalysisContent = analysisEl ? analysisEl.innerHTML : '';
+
+    // 移除題目中的答案與解析
+    if (answerEl) answerEl.remove();
+    if (analysisEl) analysisEl.remove();
+
+    let mainHtml = autoFormatOptions(tempDiv.innerHTML);
+    let shuffleOption = shuffleOptionsAndAnswer(mainHtml, optionOrder);
+	mainHtml = shuffleOption.html;
+	optionOrder = shuffleOption.order;
+	
+	if(isAnswered)
+		mainHtml = saveAndApplyOptionStates(mainHtml)
+
+    const displayBox = document.getElementById('question-display');
+    displayBox.innerHTML = `
+        <div class="question-card">
+            <div class="question-source">📚 ${q.termTitle || ''}</div>
+            <div class="question-body">${mainHtml}</div>
+        </div>
+    `;
+	
+	// 填入分析答案
+    const answerBox = document.getElementById('answer-box');
+    const analysisBox = document.getElementById('analysis-box');
+    answerBox.innerHTML = window.currentAnswerContent;
+    analysisBox.innerHTML = window.currentAnalysisContent;
+}
+
+/**
+ * 直接從 document 的 <div class="question-body"> 記錄選項狀態，並套用到目標 HTML 中
+ * @param {string} targetHtml - 要套用狀態的目標 HTML 字串
+ * @returns {string} - 套用狀態後的 HTML 字串
+ */
+function saveAndApplyOptionStates(targetHtml) {
+    // 1. 直接從整份 document 尋找 <div class="question-body"> 內的選項
+    const questionBody = document.querySelector('.question-body');
+    if (!questionBody) return targetHtml;
+
+    const options = Array.from(questionBody.querySelectorAll('.option'));
+    if (options.length === 0) return targetHtml;
+
+    // 2. 記錄帶有 selected 或 correct 的選項索引（第幾個）
+    let selectedIndices = [];
+    let correctIndices = [];
+
+    options.forEach((opt, index) => {
+        if (opt.classList.contains('selected')) {
+            selectedIndices.push(index);
+        }
+        if (opt.classList.contains('correct')) {
+            correctIndices.push(index);
+        }
+    });
+
+    // 如果沒有任何選項被選中或標記正解，直接回傳原目標 HTML
+    if (selectedIndices.length === 0 && correctIndices.length === 0) {
+        return targetHtml;
+    }
+
+    // 3. 將這些狀態對應到目標 HTML 的對應選項中
+    const targetDiv = document.createElement('div');
+    targetDiv.innerHTML = targetHtml;
+
+    const targetBody = targetDiv.querySelector('.question-body') || targetDiv;
+    const targetOptions = Array.from(targetBody.querySelectorAll('.option'));
+
+    targetOptions.forEach((opt, index) => {
+        if (selectedIndices.includes(index)) {
+            opt.classList.add('selected');
+        }
+        if (correctIndices.includes(index)) {
+            opt.classList.add('correct');
+        }
+    });
+
+    return targetDiv.innerHTML;
+}
+
+// 修改 checkAnswer
+function checkAnswer() {
+    const answerBox = document.getElementById('answer-box');
+    const analysisBox = document.getElementById('analysis-box');
+
+    // 填入內容並顯示
+    answerBox.innerHTML = window.currentAnswerContent;
+    analysisBox.innerHTML = window.currentAnalysisContent;
+    answerBox.classList.add('show');
+    analysisBox.classList.add('show');
+
+    // ... 其餘判定邏輯保持不變 ...
+    const answerText = answerBox.textContent;
+    const correctMatch = answerText.match(/([A-Z]|[ア-エ])/);
+    const correctAnswerSymbol = correctMatch ? correctMatch[1] : '';
+	
+    const selectedMatch = selectedOption ? selectedOption.match(/([A-Z]|[ア-エ])/) : null;
+    const selectedSymbol = selectedMatch ? selectedMatch[1] : '';
+
+    const isCorrect = (selectedSymbol && correctAnswerSymbol && selectedSymbol === correctAnswerSymbol);
+
+    const displayBox = document.getElementById('question-display');
+    displayBox.querySelectorAll('.option').forEach((opt) => {
+        const optText = opt.textContent;
+        const optMatch = optText.match(/([A-Z]|[ア-エ])/);
+        const symbol = optMatch ? optMatch[1] : '';
+
+        if (symbol === correctAnswerSymbol) {
+            opt.classList.add('correct');
+        } else if (symbol === selectedSymbol && !isCorrect) {
+            opt.classList.add('incorrect');
+        }
+    });
+
+    if (isCorrect) score++;
+	if(!isCorrect) {
+		isAnswerWrong = true;		
+		wrongQuestions.push(currentQuestionIndex);
+	}
+
+    updateScoreDisplay();
+
+    isAnswered = true;
+    const actionBtn = document.getElementById('action-btn');
+    
+	if(isAnswerWrong){
+        actionBtn.textContent = '檢查錯誤';
+	} else {
+		showNextQuestionText();
+	}
+}
+
+function showNextQuestionText(){
+    const actionBtn = document.getElementById('action-btn');
+    if ((answeredQuestions.length+startQuestion) >= allQuestions.length) {
+        actionBtn.textContent = '觀看測驗結果';
+    } else {
+        actionBtn.textContent = '下一題';
+    }
+}
+
+/**
+ * 接收包含題目與選項的 HTML 字串，將選項隨機打亂，並自動修正答案框中的代號
+ * @param {string} htmlContent - 包含題目、.option 與答案的 HTML 字串
+ * @returns {string} - 選項打亂並修正答案後的 HTML 字串
+ */
+function shuffleOptionsAndAnswer(htmlContent, savedOrder = null) {
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = htmlContent;
+
+    // 1. 抓出所有的 .option 元素
+    const optionDivs = Array.from(tempDiv.querySelectorAll('.option'));
+    if (optionDivs.length === 0) return { html: htmlContent, order: [] }; // 如果沒有選項就直接回傳
+
+    // 2. 解析每個選項原本的符號與文字內容
+    let originalData = optionDivs.map((div, index) => {
+        const fullText = div.innerHTML.trim();
+        const match = fullText.match(/^([A-Z|ア-エ])[\.:：]\s*(.*)$/i);
+        
+        let symbol = match ? match[1] : String.fromCharCode(65 + index);
+        let text = match ? match[2] : fullText;
+
+        return {
+            originalIndex: index, // 記住原本的索引
+            symbol: symbol,
+            text: text
+        };
+    });
+
+    // 3. 取得原本答案框裡的答案代號
+    let oldAnswerSymbol = '';
+    if (window.currentAnswerContent) {
+        const answerText = window.currentAnswerContent.trim();
+        const answerMatch = answerText.match(/[A-Z|ア-エ]/i);
+        if (answerMatch) {
+            oldAnswerSymbol = answerMatch[0];
+        }
+    }
+
+    let shuffledData = [];
+    let currentOrder = [];
+
+    // 4. 判斷是要「使用已記錄的順序」還是「隨機亂數」
+    if (Array.isArray(savedOrder) && savedOrder.length === originalData.length) {
+        // 依照傳入的順序（例如索引陣列）重新排列
+        currentOrder = savedOrder;
+        shuffledData = savedOrder.map(index => originalData[index]);
+    } else {
+        // 沒有記錄就隨機打亂 (Fisher-Yates 演算法)
+        let indices = originalData.map((_, i) => i);
+        for (let i = indices.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [indices[i], indices[j]] = [indices[j], indices[i]];
+        }
+        currentOrder = indices;
+        shuffledData = indices.map(index => originalData[index]);
+    }
+
+    // 5. 判斷原本是用哪種代號風格
+    const isJapaneseStyle = /^[ア-エ]/i.test(originalData[0].symbol);
+    const japaneseSymbols = ['ア', 'イ', 'ウ', 'エ', 'オ', 'カ'];
+    
+    let newAnswerSymbol = '';
+    let symbolMapping = {};
+
+    // 6. 將排列好的內容重新塞回 optionDivs
+    shuffledData.forEach((item, newIndex) => {
+        let newSymbol = isJapaneseStyle ? japaneseSymbols[newIndex] : String.fromCharCode(65 + newIndex);
+
+        // 記錄舊符號與新符號的對應
+        symbolMapping[item.symbol] = newSymbol;
+
+        // 檢查這個選項是不是原本正確答案的內容
+        if (oldAnswerSymbol && item.symbol === oldAnswerSymbol) {
+            newAnswerSymbol = newSymbol;
+        }
+
+        // 更新該 option 的 HTML
+        optionDivs[newIndex].innerHTML = `${newSymbol}：${item.text}`;
+    });
+
+    // 7. 同步更新答案框中的代號
+    if (window.currentAnswerContent && newAnswerSymbol) {
+        window.currentAnswerContent = window.currentAnswerContent.replace(/[A-Z|ア-エ]/i, newAnswerSymbol);
+    }
+
+    // 8. 同步更新 window.currentAnalysisContent 裡面的代號
+    if (window.currentAnalysisContent) {
+        window.currentAnalysisContent = window.currentAnalysisContent.replace(/\[([A-Z|ア-エ])\]/gi, (match, oldSym) => {
+            const upperOld = oldSym.toUpperCase();
+            if (symbolMapping[upperOld]) {
+                return `[${symbolMapping[upperOld]}]`;
+            }
+            return match;
+        });
+    }
+
+    // 回傳處理好的 HTML 以及這次使用的順序陣列（你可以把它存到卡片物件中，如 card.optionOrder = order）
+    return {
+        html: tempDiv.innerHTML,
+        order: currentOrder
+    };
+}
+
+function updateScoreDisplay() {
+    const totalQuestions = allQuestions.length;
+    document.getElementById('score-display').textContent = `目前得分：${score} / 總題數：${totalQuestions}`;
+}
+
+function showResult() {
+    const totalQuestions = allQuestions.length;
+    const resultHTML = `
+        <div class="result-card">
+            <div class="result-title">🎉 測驗完成！</div>
+            <div class="result-score">${score} / ${totalQuestions}</div>
+            <div class="result-detail">
+                總共 ${totalQuestions} 題，答對 ${score} 題<br>
+                正確率：${totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0}%
+            </div>
+			<button id="exportWrongBtn" class="btn-export-wrong" onclick="exportWrongQuestions()">匯出錯誤題目</button>
+        </div>
+    `;
+    
+    document.getElementById('question-display').style.display = 'none';
+    document.getElementById('feedback-area').style.display = 'none';
+    document.getElementById('result-display').innerHTML = resultHTML;
+    document.getElementById('result-display').style.display = 'block';
+    
+    const langSwitch = document.getElementById('language-switch');
+    if (langSwitch) langSwitch.style.display = 'none';
+    
+    document.getElementById('action-btn').style.display = 'none';
+    document.getElementById('finish-btn').style.display = 'block';
+	
+	if (!Array.isArray(wrongQuestions) || wrongQuestions.length === 0) {
+		document.getElementById('exportWrongBtn').style.display = 'none';
+	}
+}
+
+function finishQuiz() {
+    if (window.history.length > 1) {
+        window.history.back();
+    } else {
+        window.location.href = 'index.html';
+    }
+}
+
+function exportWrongQuestions() {
+    if (!Array.isArray(wrongQuestions) || wrongQuestions.length === 0) {
+        alert('目前沒有錯題記錄可以匯出！');
+        return;
+    }
+
+    if (!Array.isArray(allQuestions) || allQuestions.length === 0) {
+        alert('找不到題庫總資料 (allQuestions)！');
+        return;
+    }
+	
+    const groupName = localStorage.getItem('quizGroupName');
+
+    const exportedData = [];
+
+    // 輔助函數：從 HTML 字串中解析出 q, op, an, al
+    function parseContentToJSON(htmlContent) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlContent, 'text/html');
+
+        // 1. 取得問題 (q)
+        const cloneDoc = parser.parseFromString(htmlContent, 'text/html');
+        cloneDoc.querySelectorAll('.option, .answer, .analysis, br').forEach(el => el.remove());
+        const q = cloneDoc.body.textContent.trim();
+
+        // 2. 取得選項 (op)：直接對應，並移除開頭的アイウエA-Z文字
+        const optionEls = doc.querySelectorAll('.option');
+        const op = Array.from(optionEls).map(el => {
+            return el.textContent.replace(/^[アイウエオA-Z][\.．、\s]*/, '').trim();
+        });
+
+        // 定義對應表 (A-Z 與常見日文片假名選項)
+        const upperAlphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const japaneseSymbols = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
+
+        // 3. 取得答案 (an)：支援到 Z
+        const answerEl = doc.querySelector('.answer');
+        let an = 1; // 預設值
+        if (answerEl) {
+            const answerText = answerEl.textContent.trim();
+            let foundIndex = -1;
+
+            // 檢查英文字母 A-Z (不分大小寫)
+            for (let i = 0; i < upperAlphabet.length; i++) {
+                if (answerText.toUpperCase().includes(upperAlphabet[i])) {
+                    foundIndex = i + 1;
+                    break;
+                }
+            }
+
+            // 若無英文字母，檢查日文片假名
+            if (foundIndex === -1) {
+                for (let i = 0; i < japaneseSymbols.length; i++) {
+                    if (answerText.includes(japaneseSymbols[i])) {
+                        foundIndex = i + 1;
+                        break;
+                    }
+                }
+            }
+
+            if (foundIndex !== -1) {
+                an = foundIndex;
+            }
+        }
+
+        // 4. 取得解析 (al)：將 A-Z / 日文片假名轉換成 [1][2][3]...
+        const analysisEl = doc.querySelector('.analysis');
+        let al = '';
+        if (analysisEl) {
+            let rawAl = analysisEl.textContent.replace(/^(解説：|解析：)\s*/, '').trim();
+
+            // 替換英文字母 A-Z (不分大小寫)
+            for (let i = 0; i < upperAlphabet.length; i++) {
+                const char = upperAlphabet[i];
+                const regex = new RegExp(char, 'gi');
+                rawAl = rawAl.replace(regex, `[${i + 1}]`);
+            }
+
+            // 替換日文片假名選項符號
+            for (let i = 0; i < japaneseSymbols.length; i++) {
+                const char = japaneseSymbols[i];
+                const regex = new RegExp(char, 'g');
+                rawAl = rawAl.replace(regex, `[${i + 1}]`);
+            }
+
+            al = rawAl;
+        }
+
+        return { q, op, an, al };
+    }
+
+    // 走訪所有的錯題 Index
+    wrongQuestions.forEach(index => {
+        const item = allQuestions[index];
+        if (!item) return;
+
+        const questionObj = {};
+
+        // 如果有 jaContent，就轉換並對應到 ja
+        if (item.jaContent && item.jaContent.trim() !== '') {
+            questionObj.ja = parseContentToJSON(item.jaContent);
+        }
+
+        // 如果有 zhContent，就轉換並對應到 zh
+        if (item.zhContent && item.zhContent.trim() !== '') {
+            questionObj.zh = parseContentToJSON(item.zhContent);
+        }
+
+        // 如果 content 兩者都沒有資料，就不加入轉換
+        if (Object.keys(questionObj).length > 0) {
+            exportedData.push(questionObj);
+        }
+    });
+
+    if (exportedData.length === 0) {
+        alert('沒有成功解析出任何有內容的錯題資料！');
+        return;
+    }
+
+    // 準備轉成 JSON 字串
+    const jsonString = JSON.stringify(exportedData, null, 4);
+
+    // 決定檔名：groupName + "錯誤一覽".txt
+    let targetGroupName = groupName;
+    if (!targetGroupName && wrongQuestions.length > 0 && allQuestions[wrongQuestions[0]]) {
+        targetGroupName = allQuestions[wrongQuestions[0]].groupName || '錯題';
+    }
+    const fileName = `${targetGroupName || '錯題'}錯誤一覽.txt`;
+
+    // 建立 Blob 並觸發下載
+    const blob = new Blob([jsonString], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+window.onload = function() {
+	// 1. 取得當前網址的 GET 參數
+    const urlParams = new URLSearchParams(window.location.search);
+	
+    // 2. 透過參數名稱抓取對應的值
+    startQuestion = urlParams.get("start") ? parseInt(urlParams.get("start"), 10) : 1; // 從第幾題開始
+    isRandom = urlParams.get("random") ? urlParams.get("random") != "false" : true;     // 是否隨機 ("true" 或 "false")
+	startQuestion = startQuestion - 1;
+    loadRandomQuestion(startQuestion);
+};
+</script>
+
+</body>
+</html>
