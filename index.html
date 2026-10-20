@@ -4,199 +4,362 @@
     <meta charset="UTF-8">
     <title>考試測驗系統</title>
     <script src="util.js"></script>
-    <style>
-        :root {
-            --primary-color: #2b6cb0;
-            --bg-color: #f7fafc;
-            --card-bg: #ffffff;
-            --text-color: #2d3748;
-            --border-color: #e2e8f0;
-        }
+	<style>
+		:root {
+			--primary-color: #2b6cb0;
+			--bg-color: #f7fafc;
+			--card-bg: #ffffff;
+			--text-color: #2d3748;
+			--border-color: #e2e8f0;
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 24px 16px;
-        }
+			--section-title-color: #1a202c;
+			--sub-text-color: #4a5568;
+			--muted-color: #a0aec0;
+			--hover-bg: #edf2f7;
+			--count-bg: #ebf8ff;
+			--count-color: #2b6cb0;
+			--button-bg: #3182ce;
+			--button-hover-bg: #2b6cb0;
+			--disabled-bg: #cbd5e0;
+			--input-bg: #ffffff;
+			--file-button-bg: #4CAF50;
+			--file-button-hover-bg: #45a049;
+			--shadow-color: rgba(0, 0, 0, 0.04);
+			--button-shadow: rgba(49, 130, 206, 0.2);
+		}
 
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-        }
+		/* 深夜模式 */
+		:root.dark,
+		body.dark {
+			--primary-color: #63b3ed;
+			--bg-color: #121820;
+			--card-bg: #1e2937;
+			--text-color: #e2e8f0;
+			--border-color: #3a4758;
 
-        .section-title {
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin-bottom: 20px;
-            color: #1a202c;
-            border-bottom: 2px solid var(--primary-color);
-            padding-bottom: 8px;
-        }
+			--section-title-color: #f7fafc;
+			--sub-text-color: #cbd5e0;
+			--muted-color: #a0aec0;
+			--hover-bg: #2d3b4e;
+			--count-bg: #243d55;
+			--count-color: #90cdf4;
+			--button-bg: #3182ce;
+			--button-hover-bg: #4299e1;
+			--disabled-bg: #4a5568;
+			--input-bg: #182230;
+			--file-button-bg: #276749;
+			--file-button-hover-bg: #2f855a;
+			--shadow-color: rgba(0, 0, 0, 0.2);
+			--button-shadow: rgba(0, 0, 0, 0.2);
+		}
 
-        .cat-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 16px;
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
+		body {
+			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+				Roboto, "Helvetica Neue", Arial, sans-serif;
+			background-color: var(--bg-color);
+			color: var(--text-color);
+			margin: 0;
+			padding: 24px 16px;
+			transition: background-color 0.2s, color 0.2s;
+		}
 
-        .cat-card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 16px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
-        }
+		.container {
+			max-width: 1000px;
+			margin: 0 auto;
+		}
 
-        .cat-card__header {
-            display: flex;
-            align-items: center;
-            color: var(--primary-color);
-            font-weight: bold;
-            font-size: 1.1rem;
-            padding-bottom: 12px;
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 12px;
-        }
+		.section-title {
+			font-size: 1.5rem;
+			font-weight: bold;
+			margin-bottom: 20px;
+			color: var(--section-title-color);
+			border-bottom: 2px solid var(--primary-color);
+			padding-bottom: 8px;
+		}
 
-        .cat-card__id {
-            background-color: var(--primary-color);
-            color: white;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.85rem;
-            margin-right: 8px;
-            flex-shrink: 0;
-        }
+		.cat-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+			gap: 16px;
+			list-style: none;
+			padding: 0;
+			margin: 0;
+		}
 
-        .cat-card__name {
-            flex-grow: 1;
-        }
+		.cat-card {
+			background-color: var(--card-bg);
+			border: 1px solid var(--border-color);
+			border-radius: 8px;
+			padding: 16px;
+			box-shadow: 0 2px 4px var(--shadow-color);
+			transition: background-color 0.2s, border-color 0.2s;
+		}
 
-        .cat-card__count {
-            background-color: #ebf8ff;
-            color: #2b6cb0;
-            font-size: 0.85rem;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-weight: normal;
-        }
+		.cat-card__header {
+			display: flex;
+			align-items: center;
+			color: var(--primary-color);
+			font-weight: bold;
+			font-size: 1.1rem;
+			padding-bottom: 12px;
+			border-bottom: 1px solid var(--border-color);
+			margin-bottom: 12px;
+		}
 
-        .sub_category__list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
+		.cat-card__id {
+			background-color: #2b6cb0;
+			color: #ffffff;
+			border-radius: 50%;
+			width: 24px;
+			height: 24px;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 0.85rem;
+			margin-right: 8px;
+			flex-shrink: 0;
+		}
 
-        .sub_category__list li {
-            margin-bottom: 6px;
-        }
+		.cat-card__name {
+			flex-grow: 1;
+		}
 
-        .sub_category__link {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            text-decoration: none;
-            color: #4a5568;
-            font-size: 0.95rem;
-            padding: 4px 8px;
-            border-radius: 4px;
-            transition: background-color 0.2s;
-        }
+		.cat-card__count {
+			background-color: var(--count-bg);
+			color: var(--count-color);
+			font-size: 0.85rem;
+			padding: 2px 8px;
+			border-radius: 12px;
+			font-weight: normal;
+		}
 
-        .sub_category__link:hover {
-            background-color: #edf2f7;
-            color: #2b6cb0;
-        }
+		.sub_category__list {
+			list-style: none;
+			padding: 0;
+			margin: 0;
+		}
 
-        .word_count {
-            font-size: 0.8rem;
-            color: #a0aec0;
-        }
+		.sub_category__list li {
+			margin-bottom: 6px;
+		}
 
-        .word_count::before {
-            content: "(";
-        }
-        .word_count::after {
-            content: ")";
-        }
-        
-        .btn-quiz-start {
-            background-color: #3182ce;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            font-size: 0.9rem;
-            font-weight: bold;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background-color 0.2s, transform 0.1s;
-            box-shadow: 0 2px 4px rgba(49, 130, 206, 0.2);
-        }
+		.sub_category__link {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			text-decoration: none;
+			color: var(--sub-text-color);
+			font-size: 0.95rem;
+			padding: 4px 8px;
+			border-radius: 4px;
+			transition: background-color 0.2s, color 0.2s;
+		}
 
-        .btn-quiz-start:hover {
-            background-color: #2b6cb0;
-        }
+		.sub_category__link:hover {
+			background-color: var(--hover-bg);
+			color: var(--primary-color);
+		}
 
-        .btn-quiz-start:active {
-            transform: scale(0.98);
-        }
+		.word_count {
+			font-size: 0.8rem;
+			color: var(--muted-color);
+		}
 
-        .btn-quiz-start:disabled {
-            background-color: #cbd5e0;
-            cursor: not-allowed;
-            box-shadow: none;
-            transform: none;
-        }
+		.word_count::before {
+			content: "(";
+		}
 
-        .form-group {
-            margin-bottom: 15px;
-        }
+		.word_count::after {
+			content: ")";
+		}
 
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
+		.btn-quiz-start {
+			background-color: var(--button-bg);
+			color: #ffffff;
+			border: none;
+			padding: 8px 16px;
+			font-size: 0.9rem;
+			font-weight: bold;
+			border-radius: 6px;
+			cursor: pointer;
+			transition: background-color 0.2s, transform 0.1s;
+			box-shadow: 0 2px 4px var(--button-shadow);
+		}
 
-        .form-group input[type="number"] {
-            padding: 6px 10px;
-            font-size: 1rem;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            width: 120px;
-        }
-		
-		/* 針對瀏覽器內建的「選擇檔案」按鈕進行微調（以 Webkit 核心為例，如 Chrome、Safari、Edge） */
+		.btn-quiz-start:hover {
+			background-color: var(--button-hover-bg);
+		}
+
+		.btn-quiz-start:active {
+			transform: scale(0.98);
+		}
+
+		.btn-quiz-start:disabled {
+			background-color: var(--disabled-bg);
+			color: #a0aec0;
+			cursor: not-allowed;
+			box-shadow: none;
+			transform: none;
+		}
+
+		.form-group {
+			margin-bottom: 15px;
+		}
+
+		.form-group label {
+			display: block;
+			margin-bottom: 5px;
+			font-weight: bold;
+			color: var(--text-color);
+		}
+
+		.form-group input[type="number"] {
+			padding: 6px 10px;
+			font-size: 1rem;
+			border: 1px solid var(--border-color);
+			border-radius: 4px;
+			width: 120px;
+			background-color: var(--input-bg);
+			color: var(--text-color);
+		}
+
+		input[type="file"] {
+			color: var(--text-color);
+		}
+
 		input[type="file"]::file-selector-button {
 			padding: 6px 12px;
 			margin-right: 12px;
 			font-size: 13px;
 			font-weight: 500;
-			color: #fff;
-			background-color: #4CAF50;
+			color: #ffffff;
+			background-color: var(--file-button-bg);
 			border: none;
 			border-radius: 4px;
 			cursor: pointer;
 			transition: background-color 0.2s;
 		}
 
-		/* 檔案按鈕 hover 效果 */
 		input[type="file"]::file-selector-button:hover {
+			background-color: var(--file-button-hover-bg);
+		}
+
+		/* 其他表單控制項 */
+		input,
+		select,
+		textarea {
+			color: var(--text-color);
+			border-color: var(--border-color);
+		}
+
+		select,
+		textarea {
+			background-color: var(--input-bg);
+		}
+		
+		/* =========================
+		   深色模式切換按鈕
+		   ========================= */
+
+		.theme-toggle {
+			position: fixed;
+			top: 16px;
+			right: 16px;
+			z-index: 1000;
+
+			padding: 8px 14px;
+			border: 1px solid #cbd5e0;
+			border-radius: 20px;
+			background-color: #ffffff;
+			color: #333333;
+
+			font-size: 14px;
+			cursor: pointer;
+
+			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+			transition: all 0.2s ease;
+		}
+
+		.theme-toggle:hover {
+			background-color: #f7fafc;
+		}
+		
+		/* Dialog 基本樣式 */
+		#quizCreatorDialog {
+			background-color: var(--card-bg);
+			color: var(--text-color);
+			border: 1px solid var(--border-color) !important;
+			border-radius: 8px;
+			box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+		}
+
+		/* Dialog 背後的遮罩 */
+		#quizCreatorDialog::backdrop {
+			background-color: rgba(0, 0, 0, 0.5);
+		}
+
+		/* 標題 */
+		#quizCreatorDialog h3 {
+			color: var(--section-title-color);
+		}
+
+		/* Label */
+		#quizCreatorDialog label {
+			color: var(--text-color);
+		}
+
+		/* 輸入框與文字區域 */
+		#quizCreatorDialog input[type="text"],
+		#quizCreatorDialog textarea {
+			background-color: var(--input-bg);
+			color: var(--text-color);
+			border: 1px solid var(--border-color);
+			border-radius: 4px;
+		}
+
+		/* Placeholder */
+		#quizCreatorDialog input::placeholder,
+		#quizCreatorDialog textarea::placeholder {
+			color: var(--muted-color);
+		}
+
+		/* 輸入框取得焦點 */
+		#quizCreatorDialog input:focus,
+		#quizCreatorDialog textarea:focus {
+			outline: 2px solid var(--primary-color);
+			outline-offset: 1px;
+		}
+
+		/* 取消按鈕 */
+		#closeDialogBtn {
+			background-color: var(--card-bg);
+			color: var(--text-color);
+			border: 1px solid var(--border-color);
+			border-radius: 4px;
+		}
+
+		/* 取消按鈕 hover */
+		#closeDialogBtn:hover {
+			background-color: var(--hover-bg);
+		}
+
+		/* 保存按鈕 */
+		#saveQuizFileBtn {
+			background-color: #4CAF50;
+			color: #ffffff;
+		}
+
+		#saveQuizFileBtn:hover {
 			background-color: #45a049;
 		}
-    </style>
+	</style>
+
 </head>
 <body>
     <div class="container">
+	<button id="theme-toggle" class="theme-toggle">
+		🌙 深色模式
+	</button>
         <div class="section-title">考試測驗系統設定</div>
         
         <div class="cat-card">
@@ -213,7 +376,7 @@
                 <input type="number" id="questionCountInput" value="20" min="1">
             </div>
 			
-			<div class="form-group">
+			<div class="form-group" id="startQuestionGroup">
                 <label for="startQuestionInput">從第幾題開始：</label>
                 <input type="number" id="startQuestionInput" value="1" min="1">
             </div>
@@ -246,6 +409,38 @@
 	</dialog>
 
     <script>
+	 // 切換深色/淺色
+	const themeToggle = document.getElementById("theme-toggle");
+	themeToggle.addEventListener("click", function () {
+		document.documentElement.classList.toggle("dark");
+		document.body.classList.toggle("dark");
+
+		const isDark = document.body.classList.contains("dark");
+
+		localStorage.setItem("theme", isDark ? "dark" : "light");
+
+		updateThemeButton();
+	});
+		
+	function updateThemeButton() {
+		if (document.body.classList.contains("dark")) {
+			themeToggle.textContent = "☀️ 淺色模式";
+		} else {
+			themeToggle.textContent = "🌙 深色模式";
+		}
+	}
+	
+	// 讀取上次的設定
+    if (localStorage.getItem("theme") === "dark") {
+        document.documentElement.classList.add("dark");
+        document.body.classList.add("dark");
+    }
+	
+	function updateStartQuestionVisibility() {
+		document.getElementById('startQuestionGroup').style.display = 
+			document.getElementById('randomQuizCheckbox').checked ? "none" : "";
+	}
+
         // 頁面載入時，從 localStorage 還原上傳的檔案路徑/檔名與設定（若有的話）
         window.addEventListener('DOMContentLoaded',async () => {
             const savedGroupName = localStorage.getItem('quizGroupName');
@@ -262,6 +457,9 @@
             if (!savedIsRandom) {
                 document.getElementById('isRandom').checked = !savedIsRandom;
             }
+			
+			updateStartQuestionVisibility();
+			document.getElementById('randomQuizCheckbox').addEventListener("change", updateStartQuestionVisibility);
         });
 		
 		function gotoQuiz(finalQuestions, groupName){

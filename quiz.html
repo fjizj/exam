@@ -258,11 +258,157 @@
 			transform: translateY(1px);
 			box-shadow: 0 2px 5px rgba(238, 82, 83, 0.3);
 		}
+		
+		/* =========================
+		   深色模式切換按鈕
+		   ========================= */
+
+		.theme-toggle {
+			position: fixed;
+			top: 16px;
+			right: 16px;
+			z-index: 1000;
+
+			padding: 8px 14px;
+			border: 1px solid #cbd5e0;
+			border-radius: 20px;
+			background-color: #ffffff;
+			color: #333333;
+
+			font-size: 14px;
+			cursor: pointer;
+
+			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+			transition: all 0.2s ease;
+		}
+
+		.theme-toggle:hover {
+			background-color: #f7fafc;
+		}
+
+		/* =========================
+		   深色模式
+		   ========================= */
+
+		html.dark,
+		body.dark {
+			background-color: #121212;
+		}
+
+		body.dark {
+			color: #e0e0e0;
+		}
+
+		body.dark .container {
+			background-color: #1e1e1e;
+			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+		}
+
+		body.dark .header {
+			border-bottom-color: #333333;
+		}
+
+		body.dark .quiz-title {
+			color: #f0f0f0;
+		}
+
+		body.dark .quiz-subtitle {
+			color: #aaaaaa;
+		}
+
+		body.dark .score-display {
+			background-color: #2a2a2a;
+			color: #63b3ed;
+		}
+
+		body.dark .lang-btn {
+			background-color: #2a2a2a;
+			border-color: #444444;
+			color: #dddddd;
+		}
+
+		body.dark .question-source {
+			color: #999999;
+		}
+
+		body.dark .question-body {
+			color: #e0e0e0;
+		}
+
+		body.dark .option {
+			background-color: #252525;
+			border-color: #444444;
+			color: #e0e0e0;
+		}
+
+		body.dark .option:hover {
+			background-color: #303030;
+			border-color: #666666;
+		}
+
+		/* 選取 */
+		body.dark .option.selected {
+			background-color: #163a52 !important;
+			color: #e0e0e0;
+		}
+
+		/* 答對 */
+		body.dark .option.correct {
+			background-color: #173b28 !important;
+			color: #9ae6b4;
+		}
+
+		/* 答錯 */
+		body.dark .option.incorrect {
+			background-color: #451a1a !important;
+			color: #feb2b2;
+		}
+
+		/* 答案 */
+		body.dark .answer {
+			background-color: #163a52;
+			color: #90cdf4;
+		}
+
+		/* 解析 */
+		body.dark .analysis {
+			background-color: #3d3218;
+			color: #f6d365;
+		}
+
+		/* 結果 */
+		body.dark .result-detail {
+			color: #cccccc;
+		}
+
+		/* 深色模式下的切換按鈕 */
+		body.dark .theme-toggle {
+			background-color: #2a2a2a;
+			border-color: #555555;
+			color: #eeeeee;
+		}
+
+		body.dark .theme-toggle:hover {
+			background-color: #333333;
+		}
+		
+		body.dark .lang-btn.active {
+			background-color: #3182ce !important;
+			color: white !important;
+			border-color: #3182ce !important;
+		}
+		
+		body.dark img {
+			background-color: #fff;
+		}
     </style>
 </head>
 <body>
 
 <div class="container">
+	<button id="theme-toggle" class="theme-toggle">
+		🌙 深色模式
+	</button>
     <div class="header">
         <div>
             <div class="quiz-title" id="quiz-title">🎯 隨機測驗</div>
@@ -300,6 +446,27 @@
 </div>
 
 <script>
+ // 切換深色/淺色
+const themeToggle = document.getElementById("theme-toggle");
+themeToggle.addEventListener("click", function () {
+	document.documentElement.classList.toggle("dark");
+	document.body.classList.toggle("dark");
+
+	const isDark = document.body.classList.contains("dark");
+
+	localStorage.setItem("theme", isDark ? "dark" : "light");
+
+	updateThemeButton();
+});
+	
+function updateThemeButton() {
+	if (document.body.classList.contains("dark")) {
+		themeToggle.textContent = "☀️ 淺色模式";
+	} else {
+		themeToggle.textContent = "🌙 深色模式";
+	}
+}
+
 let allQuestions = [];
 let currentIndex = -1; 
 let currentQuestion = null;
@@ -972,6 +1139,13 @@ function exportWrongQuestions() {
 }
 
 window.onload = function() {
+
+	// 讀取上次的設定
+    if (localStorage.getItem("theme") === "dark") {
+        document.documentElement.classList.add("dark");
+        document.body.classList.add("dark");
+    }
+	
 	// 1. 取得當前網址的 GET 參數
     const urlParams = new URLSearchParams(window.location.search);
 	
